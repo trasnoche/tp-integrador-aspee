@@ -1,12 +1,12 @@
-# TP Integrador · DAW1 — <Nombre del sistema>
+# TP Integrador · DAW1 - Biblioteca
 
-**Alumno/a:** Apellido, Nombre · **Legajo:** 00000
-**Enunciado elegido:** <biblioteca | gimnasio | taller | canchas | eventos>
-
+**Alumno/a:** Aspee, Nicolas · **Legajo:** 510104
+**Enunciado elegido:** biblioteca
 
 ## Descripción
 
-<Dos o tres líneas: qué hace el sistema y para quién.>
+API REST para una biblioteca barrial. Registra libros, socios y prestamos, controla que un libro no se
+preste dos veces a la vez y que cada socio no tenga mas de 3 prestamos sin devolver.
 
 ## Cómo ejecutarlo
 
@@ -17,33 +17,60 @@ Requisitos: Java 21 (Maven viene incluido con `mvnw`).
 ```
 
 La API queda en `http://localhost:8080/api`. La base H2 se guarda en `data/` (no se sube al repositorio).
-Consola H2: `http://localhost:8080/h2-console`.
+Consola H2: `http://localhost:8080/h2-console` (URL `jdbc:h2:file:./data/biblioteca`, usuario `sa`, sin contraseña).
 
 ## Modelo
 
 | Entidad | Atributos principales | Relaciones |
 |---|---|---|
-| <Entidad1> | id, ... | ... |
-| <Entidad2> | id, ... | ... |
-| <Entidad3> | id, estado, ... | N a 1 con <Entidad1> y <Entidad2> |
+| Libro | id, titulo, autor, isbn (unico) | N/A |
+| Socio | id, nombre, email | N/A |
+| Prestamo | id, estado, fechaDevolucion, fechaRealDevolucion, multa, multaPagada, renovado | N a 1 con Libro y Socio |
 
-Estados de <Entidad3>: `ESTADO_A → ESTADO_B | ESTADO_C`, ...
+Estados de Prestamo: `ACTIVO → DEVUELTO | VENCIDO`, `VENCIDO → DEVUELTO`. `DEVUELTO` es final.
 
 ## Endpoints
 
 | Método | Ruta | Descripción | Respuestas |
 |---|---|---|---|
-| GET | /api/... | Lista ... | 200 |
-| GET | /api/.../{id} | Busca por id | 200, 404 |
-| POST | /api/... | Crea | 201, 400, 404, 409 |
-| PUT | /api/.../{id} | Modifica | 200, 400, 404, 409 |
-| DELETE | /api/.../{id} | Borra | 204, 404, 409 |
-| PATCH | /api/.../{id}/estado | Cambia el estado | 200, 400, 404, 409 |
+| GET | /api/libros | Lista los libros (`?disponible=true` solo los que no estan prestados) | 200 |
+| GET | /api/libros/{id} | Busca por id | 200, 400, 404 |
+| GET | /api/libros/mas-prestados?top=5 | Libros con mas prestamos y su cantidad | 200 |
+| POST | /api/libros | Crea | 201, 400, 409 |
+| PUT | /api/libros/{id} | Modifica | 200, 400, 404, 409 |
+| DELETE | /api/libros/{id} | Borra | 204, 404, 409 |
+| GET | /api/socios | Lista los socios | 200 |
+| GET | /api/socios/{id} | Busca por id | 200, 400, 404 |
+| GET | /api/socios/{id}/prestamos | Prestamos del socio | 200, 404 |
+| POST | /api/socios | Crea | 201, 400 |
+| PUT | /api/socios/{id} | Modifica | 200, 400, 404 |
+| DELETE | /api/socios/{id} | Borra | 204, 404, 409 |
+| GET | /api/prestamos | Lista los prestamos (`?estado=ACTIVO` filtra por estado) | 200, 400 |
+| GET | /api/prestamos/{id} | Busca por id | 200, 400, 404 |
+| POST | /api/prestamos | Crea en estado ACTIVO | 201, 400, 404, 409 |
+| PATCH | /api/prestamos/{id}/estado | Cambia el estado | 200, 400, 404, 409 |
+| PATCH | /api/prestamos/{id}/renovar | Suma 7 dias a la fecha de devolucion | 200, 404, 409 |
+| PATCH | /api/prestamos/{id}/pagar-multa | Marca la multa como pagada | 200, 404 |
+
+Los errores se devuelven como ProblemDetail (`status`, `title`, `detail`). Los 400 de validacion agregan
+`errores` con campo → mensaje.
 
 ## Reglas de negocio
 
-1. <Regla 1 y qué código devuelve>
-2. <Regla 2>
+1. Un libro con un prestamo no devuelto no se puede volver a prestar → 409.
+2. Un socio puede tener como maximo 3 prestamos no devueltos → 409.
+3. No puede haber dos libros con el mismo ISBN → 409.
+4. Un libro o un socio con prestamos registrados no se puede borrar → 409.
+5. Una transicion de estado no permitida → 409.
+
+## Extras
+
+- **Multa por atraso:** al pasar a DEVUELTO se guarda `fechaRealDevolucion`; si es posterior a
+  `fechaDevolucion`, `multa` = dias de atraso × $500.
+- **Socio suspendido:** un socio con una multa sin pagar no puede pedir prestamos (409).
+- **Disponibilidad:** `GET /api/libros?disponible=true`.
+- **Ranking:** `GET /api/libros/mas-prestados?top=5`.
+- **Renovacion:** una sola vez y solo si el prestamo esta ACTIVO (si no, 409).
 
 ## Pruebas
 

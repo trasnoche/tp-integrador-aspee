@@ -1,32 +1,112 @@
-### Archivo de pruebas · reemplazá las rutas por las de tu enunciado
 ### En IntelliJ: abrí este archivo y tocá el ▶ verde de cada petición.
 
 @base = http://localhost:8080/api
 
-### Listar
-GET {{base}}/recursos
+### Listar libros
+GET {{base}}/libros
 
-### Crear
-POST {{base}}/recursos
+### Crear libro
+POST {{base}}/libros
 Content-Type: application/json
 
 {
-  "campo1": "valor",
-  "campo2": "valor",
-  "campo3": "valor"
+  "titulo": "Rayuela",
+  "autor": "Julio Cortazar",
+  "isbn": "978-950-07-0001-1"
 }
 
-### Buscar por id
-GET {{base}}/recursos/1
+### Buscar libro por id
+GET {{base}}/libros/1
 
-### Error de validación (400)
-POST {{base}}/recursos
+### Modificar libro
+PUT {{base}}/libros/1
 Content-Type: application/json
 
-{ "campo1": "" }
+{
+  "titulo": "Rayuela (2.ª ed.)",
+  "autor": "Julio Cortazar",
+  "isbn": "978-950-07-0001-1"
+}
+
+### Borrar libro
+DELETE {{base}}/libros/1
+
+### Libro invalido (400)
+POST {{base}}/libros
+Content-Type: application/json
+
+{ "titulo": "" }
+
+### ISBN repetido (409)
+POST {{base}}/libros
+Content-Type: application/json
+
+{
+  "titulo": "Copia",
+  "autor": "Otro",
+  "isbn": "978-950-07-0001-1"
+}
+
+### Libros disponibles
+GET {{base}}/libros?disponible=true
+
+### Libros mas prestados
+GET {{base}}/libros/mas-prestados?top=5
+
+### Listar socios
+GET {{base}}/socios
+
+### Crear socio
+POST {{base}}/socios
+Content-Type: application/json
+
+{
+  "nombre": "Ana Diaz",
+  "email": "ana@mail.com"
+}
+
+### Socio con email invalido (400)
+POST {{base}}/socios
+Content-Type: application/json
+
+{
+  "nombre": "Ana Diaz",
+  "email": "ana"
+}
+
+### Prestamos de un socio
+GET {{base}}/socios/1/prestamos
+
+### Crear prestamo
+POST {{base}}/prestamos
+Content-Type: application/json
+
+{
+  "libroId": 1,
+  "socioId": 1,
+  "fechaDevolucion": "2026-12-10"
+}
+
+### Listar prestamos
+GET {{base}}/prestamos
+
+### Prestamos por estado
+GET {{base}}/prestamos?estado=ACTIVO
+
+### Renovar prestamo
+PATCH {{base}}/prestamos/1/renovar
 
 ### Cambiar estado
-PATCH {{base}}/otro-recurso/1/estado
+PATCH {{base}}/prestamos/1/estado
 Content-Type: application/json
 
-{ "estado": "OTRO_ESTADO" }
+{ "estado": "DEVUELTO" }
+
+### Transicion no permitida (409)
+PATCH {{base}}/prestamos/1/estado
+Content-Type: application/json
+
+{ "estado": "ACTIVO" }
+
+### Pagar multa
+PATCH {{base}}/prestamos/1/pagar-multa
