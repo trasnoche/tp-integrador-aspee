@@ -23,8 +23,8 @@ Consola H2: `http://localhost:8080/h2-console` (URL `jdbc:h2:file:./data/bibliot
 
 | Entidad | Atributos principales | Relaciones |
 |---|---|---|
-| Libro | id, titulo, autor, isbn (unico) | N/A |
-| Socio | id, nombre, email | N/A |
+| Libro | id, titulo, autor, isbn (unico) | 1 a N con Prestamo |
+| Socio | id, nombre, email | 1 a N con Prestamo |
 | Prestamo | id, estado, fechaDevolucion, fechaRealDevolucion, multa, multaPagada, renovado | N a 1 con Libro y Socio |
 
 Estados de Prestamo: `ACTIVO → DEVUELTO | VENCIDO`, `VENCIDO → DEVUELTO`. `DEVUELTO` es final.
